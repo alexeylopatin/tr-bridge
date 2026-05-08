@@ -7,15 +7,18 @@
 #   bash install/mac.sh                 # upgrade (если уже paired в Keychain)
 #
 # Env overrides (для отладки/staging):
-#   BOT_BRIDGE_VERSION   — версия wheel'а в GitHub Release (default: 0.1.0)
+#   BOT_BRIDGE_VERSION   — версия wheel'а в GitHub Release (default: 0.1.1)
 #   BOT_BRIDGE_WEBHOOK   — URL Cloud Run tg-webhook (default: prod URL ниже)
-#   BOT_BRIDGE_REPO      — owner/name репо с релизом (default: alexeylopatin/tr-bridge)
+#   BOT_BRIDGE_REPO      — owner/name публичного релиз-mirror'а (default:
+#                          alexeylopatin/tr-bridge; основной код в
+#                          redkeyl/torrent-checker — приватный, поэтому
+#                          артефакты публикуются в зеркало).
 
 set -euo pipefail
 
 PAIR_CODE="${1:-}"
 
-BRIDGE_VERSION="${BOT_BRIDGE_VERSION:-0.1.0}"
+BRIDGE_VERSION="${BOT_BRIDGE_VERSION:-0.1.1}"
 WEBHOOK_URL="${BOT_BRIDGE_WEBHOOK:-https://tg-webhook-nl2zzrzzgq-ew.a.run.app}"
 BRIDGE_REPO="${BOT_BRIDGE_REPO:-alexeylopatin/tr-bridge}"
 WHEEL_URL="https://github.com/${BRIDGE_REPO}/releases/download/bridge-v${BRIDGE_VERSION}/bot_bridge-${BRIDGE_VERSION}-py3-none-any.whl"
