@@ -7,7 +7,7 @@
 #   bash install/mac.sh                 # upgrade (если уже paired в Keychain)
 #
 # Env overrides (для отладки/staging):
-#   BOT_BRIDGE_VERSION   — версия wheel'а в GitHub Release (default: 0.1.2)
+#   BOT_BRIDGE_VERSION   — версия wheel'а в GitHub Release (default: 0.1.3)
 #   BOT_BRIDGE_WEBHOOK   — URL Cloud Run bridge-api (default: prod URL ниже).
 #                          Имя env-переменной — legacy: исходно endpoint'ы
 #                          `/api/bridge/*` лежали в tg-webhook; на 3.9 PR-5
@@ -22,7 +22,7 @@ set -euo pipefail
 
 PAIR_CODE="${1:-}"
 
-BRIDGE_VERSION="${BOT_BRIDGE_VERSION:-0.1.2}"
+BRIDGE_VERSION="${BOT_BRIDGE_VERSION:-0.1.3}"
 WEBHOOK_URL="${BOT_BRIDGE_WEBHOOK:-https://bridge-api-nl2zzrzzgq-ew.a.run.app}"
 BRIDGE_REPO="${BOT_BRIDGE_REPO:-alexeylopatin/tr-bridge}"
 WHEEL_URL="https://github.com/${BRIDGE_REPO}/releases/download/bridge-v${BRIDGE_VERSION}/bot_bridge-${BRIDGE_VERSION}-py3-none-any.whl"
