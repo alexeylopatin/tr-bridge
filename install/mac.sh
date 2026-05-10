@@ -119,22 +119,38 @@ else
     "${INSTALL_DIR}/.venv/bin/pip" install --quiet "${WHEEL_URL}"
 fi
 
+# Один вызов status'а — результат используется и в шаге 3 (skip config-init),
+# и в шаге 4 (skip pair). status exit 0 = config + device на месте + (webhook OK
+# или временный network error); exit 1 = config/device отсутствует или токен
+# revoked → нужен свежий pair_code.
+PAIRED=0
+"${INSTALL_DIR}/.venv/bin/bot-bridge" status >/dev/null 2>&1 && PAIRED=1
+
 # 3. Конфиг + пароль Transmission в Keychain. Пароль через stdin —
 #    чтобы не светиться в `ps aux` на этапе config-init.
-read -rsp "Transmission RPC password: " TRANS_PASSWORD; echo
-printf '%s\n' "${TRANS_PASSWORD}" | \
-    "${INSTALL_DIR}/.venv/bin/bot-bridge" config-init \
-        --webhook-url "${WEBHOOK_URL}" \
-        --transmission-password-stdin
-unset TRANS_PASSWORD
+#
+# Upgrade-ветка (без PAIR_CODE и paired): config.json + Keychain device +
+# transmission_password уже валидны — переспрашивать пароль и перезаписывать
+# config-init не нужно. Если юзер ввёл невалидный пароль на этом шаге,
+# daemon ловит 401 от Transmission и UX становится хуже, чем перед апгрейдом
+# (юзеру казалось, что апгрейд сломал авторизацию, хотя на деле скрипт сам
+# её и затёр).
+if [ -z "${PAIR_CODE}" ] && [ "${PAIRED}" = "1" ]; then
+    echo "Устройство уже paired — config.json и пароль Transmission в Keychain оставляю как есть."
+    echo "  (если пароль Transmission поменялся: bot-bridge unpair && bash install/mac.sh <new_code>)"
+else
+    read -rsp "Transmission RPC password: " TRANS_PASSWORD; echo
+    printf '%s\n' "${TRANS_PASSWORD}" | \
+        "${INSTALL_DIR}/.venv/bin/bot-bridge" config-init \
+            --webhook-url "${WEBHOOK_URL}" \
+            --transmission-password-stdin
+    unset TRANS_PASSWORD
+fi
 
 # 4. Pair (обмен кода → device_token; токен в Keychain).
 #    Idempotent: для upgrade-сценария (`bash install/mac.sh` без аргумента)
-#    пропускаем pair-шаг, если устройство уже paired. status exit 0 =
-#    config + device на месте + (webhook OK или временный network error);
-#    status exit 1 = config/device отсутствует или токен revoked → нужен
-#    свежий pair_code.
-if "${INSTALL_DIR}/.venv/bin/bot-bridge" status >/dev/null 2>&1; then
+#    пропускаем pair-шаг, если устройство уже paired.
+if [ "${PAIRED}" = "1" ]; then
     echo "Устройство уже paired (status OK) — pair-шаг пропускаю."
     if [ -n "${PAIR_CODE}" ]; then
         echo "  (pair_code '${PAIR_CODE}' проигнорирован; для перепаринга:"
